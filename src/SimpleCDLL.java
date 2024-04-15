@@ -6,9 +6,10 @@ import java.util.NoSuchElementException;
 /**
  * Simple doubly-linked lists.
  *
- * These do *not* (yet) support the Fail Fast policy.
+ * @author David Rhoades
+ * @author Sam Rebelsky
  */
-public class SimpleDLL<T> implements SimpleList<T> {
+public class SimpleCDLL<T> implements SimpleList<T> {
   // +--------+------------------------------------------------------------
   // | Fields |
   // +--------+
@@ -16,7 +17,7 @@ public class SimpleDLL<T> implements SimpleList<T> {
   /**
    * The front of the list
    */
-  Node2<T> front;
+  Node2<T> dummy;
 
   /**
    * The number of values in the list.
@@ -30,8 +31,8 @@ public class SimpleDLL<T> implements SimpleList<T> {
   /**
    * Create an empty list.
    */
-  public SimpleDLL() {
-    this.front = null;
+  public SimpleCDLL() {
+    this.dummy = new Node2(dummy, null, dummy);
     this.size = 0;
   } // SimpleDLL
 
@@ -60,8 +61,8 @@ public class SimpleDLL<T> implements SimpleList<T> {
        * The cursor is between neighboring values, so we start links
        * to the previous and next value..
        */
-      Node2<T> prev = null;
-      Node2<T> next = SimpleDLL.this.front;
+      Node2<T> prev = dummy;
+      Node2<T> next = SimpleCDLL.this.dummy.next;
 
       /**
        * The node to be updated by remove or set.  Has a value of
@@ -74,26 +75,13 @@ public class SimpleDLL<T> implements SimpleList<T> {
       // +---------+
 
       public void add(T val) throws UnsupportedOperationException {
-        // Special case: The list is empty)
-        if (SimpleDLL.this.front == null) {
-          SimpleDLL.this.front = new Node2<T>(val);
-          this.prev = SimpleDLL.this.front;
-        } // empty list
-        // Special case: At the front of a list
-        else if (prev == null) {
-          this.prev = this.next.insertBefore(val);
-          SimpleDLL.this.front = this.prev;
-        } // front of list
-        // Normal case
-        else {
           this.prev = this.prev.insertAfter(val);
-        } // normal case
 
         // Note that we cannot update
         this.update = null;
 
         // Increase the size
-        ++SimpleDLL.this.size;
+        ++SimpleCDLL.this.size;
 
         // Update the position.  (See SimpleArrayList.java for more of
         // an explanation.)
@@ -101,7 +89,7 @@ public class SimpleDLL<T> implements SimpleList<T> {
       } // add(T)
 
       public boolean hasNext() {
-        return (this.pos < SimpleDLL.this.size);
+        return (this.pos < SimpleCDLL.this.size);
       } // hasNext()
 
       public boolean hasPrevious() {
@@ -154,13 +142,13 @@ public class SimpleDLL<T> implements SimpleList<T> {
         } // if
 
         // Update the front
-        if (SimpleDLL.this.front == this.update) {
-          SimpleDLL.this.front = this.update.next;
+        if (SimpleCDLL.this.front == this.update) {
+          SimpleCDLL.this.front = this.update.next;
         } // if
 
         // Do the real work
         this.update.remove();
-        --SimpleDLL.this.size;
+        --SimpleCDLL.this.size;
 
         // Note that no more updates are possible
         this.update = null;
