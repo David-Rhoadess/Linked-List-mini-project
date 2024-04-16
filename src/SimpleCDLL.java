@@ -24,6 +24,11 @@ public class SimpleCDLL<T> implements SimpleList<T> {
    */
   int size;
 
+  /**
+   * Iteretor fail-fast check
+   */
+  long iterVerstion;
+
   // +--------------+------------------------------------------------------
   // | Constructors |
   // +--------------+
@@ -32,10 +37,11 @@ public class SimpleCDLL<T> implements SimpleList<T> {
    * Create an empty list.
    */
   public SimpleCDLL() {
-    this.dummy = new Node2(null);
+    this.dummy = new Node2<T>(null);
     this.dummy.next = this.dummy;
     this.dummy.prev = this.dummy;
     this.size = 0;
+    this.iterVerstion = 0;
   } // SimpleDLL
 
   // +-----------+---------------------------------------------------------
@@ -72,12 +78,24 @@ public class SimpleCDLL<T> implements SimpleList<T> {
        */
       Node2<T> update = null;
 
+      /**
+       * A value to be updates when this iterator makes changes to 
+       * a list and to be compared to the lists version before any action,
+       * throwing a ConcurrentModificationException if not
+       */
+      long myVersion = SimpleCDLL.this.iterVerstion;
+
       // +---------+-------------------------------------------------------
       // | Methods |
       // +---------+
 
-      public void add(T val) throws UnsupportedOperationException {
-          this.prev = this.prev.insertAfter(val);
+      /**
+       * Add val to the list
+       */
+      public void add(T val) throws UnsupportedOperationException, ConcurrentModificationException{
+        failFastCheck();
+
+        this.prev = this.prev.insertAfter(val);
 
         // Note that we cannot update
         this.update = null;
@@ -88,20 +106,36 @@ public class SimpleCDLL<T> implements SimpleList<T> {
         // Update the position.  (See SimpleArrayList.java for more of
         // an explanation.)
         ++this.pos;
+
+        // Update fail-fast counter
+        this.myVersion = ++SimpleCDLL.this.iterVerstion;
       } // add(T)
 
-      public boolean hasNext() { // come back and update these once every thing else is working?
-        return (this.pos < SimpleCDLL.this.size);
+      /**
+       * Returns true is the list has a valid next value, returns false otherwise
+       */
+      public boolean hasNext() throws ConcurrentModificationException{ 
+        failFastCheck();
+        return (this.next != SimpleCDLL.this.dummy);
       } // hasNext()
 
-      public boolean hasPrevious() {
-        return (this.pos > 0);
+      /**
+       * Returns true is the list has a valid previous value, returns false otherwise
+       */
+      public boolean hasPrevious() throws ConcurrentModificationException{
+        failFastCheck();
+        return (this.prev != SimpleCDLL.this.dummy);
       } // hasPrevious()
 
-      public T next() {
+      /**
+       * Returns the next value in the list and advances the iterator
+       */
+      public T next() throws ConcurrentModificationException{
+        failFastCheck();
         if (!this.hasNext()) {
          throw new NoSuchElementException();
         } // if
+        
         // Identify the node to update
         this.update = this.next;
         // Advance the cursor
@@ -113,28 +147,48 @@ public class SimpleCDLL<T> implements SimpleList<T> {
         return this.update.value;
       } // next()
 
-      public int nextIndex() {
+      /**
+       * returns the index of the next value in the list (even if it does not exist)
+       */
+      public int nextIndex() throws ConcurrentModificationException{
+        failFastCheck();
         return this.pos;
       } // nextIndex()
 
-      public int previousIndex() {
+      /**
+       * returns the index of the previous value in the list (even if it does not exist)
+       */
+      public int previousIndex() throws ConcurrentModificationException{
+        failFastCheck();
         return this.pos - 1;
       } // prevIndex
 
-      public T previous() throws NoSuchElementException {
+      /**
+       * Returns the previous value in the list and moves the iterator back one value
+       */
+      public T previous() throws NoSuchElementException, ConcurrentModificationException {
+        failFastCheck();
         if (!this.hasPrevious()) { 
           throw new NoSuchElementException();
-        }
+        } // if
         // Identify the node to update
         this.update = this.prev;
         // Move the cursor
-        this.prev = this.next;
-        this.next = this.next.next;
+        this.next = this.prev;
+        this.prev = this.prev.prev;
         this.pos--;
         return this.update.value;
       } // previous()
 
-      public void remove() {
+      /**
+       * removes the last value returned by previous or next. If remove has already been called since the last
+       * call of one of these, an IllegalStateException is thrown.
+       */
+      public void remove() throws IllegalStateException, ConcurrentModificationException{
+        failFastCheck();
+        if (!this.hasPrevious()) { 
+          throw new NoSuchElementException();
+        } // if
         // Sanity check
         if (this.update == null) {
           throw new IllegalStateException();
@@ -155,9 +209,19 @@ public class SimpleCDLL<T> implements SimpleList<T> {
 
         // Note that no more updates are possible
         this.update = null;
+
+        // Update fail-fast counter
+        this.myVersion = ++SimpleCDLL.this.iterVerstion;
       } // remove()
 
-      public void set(T val) {
+      /**
+       * Sets the last value returned by previous or next to val, same restrictions as remove apply.
+       */
+      public void set(T val) throws ConcurrentModificationException{
+        failFastCheck();
+        if (!this.hasPrevious()) { 
+          throw new NoSuchElementException();
+        } // if
         // Sanity check
         if (this.update == null) {
           throw new IllegalStateException();
@@ -167,6 +231,17 @@ public class SimpleCDLL<T> implements SimpleList<T> {
         // Note that no more updates are possible
         this.update = null;
       } // set(T)
+
+      /**
+       * Checks to see if this iterator is up-to-date (no structural modifcations have been made since its creation b another iterator)
+       * @throws ConcurrentModificationException
+       */
+      public void failFastCheck() throws ConcurrentModificationException{
+        // Fail-fast?
+        if(this.myVersion != SimpleCDLL.this.iterVerstion) {
+          throw new ConcurrentModificationException();
+        } // if
+      }
     };
   } // listIterator()
 

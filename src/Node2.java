@@ -87,8 +87,8 @@ public class Node2<T> {
   void remove() {
     this.prev.next = this.next;
     this.next.prev = this.prev;
-    this.prev = null;
-    this.next = null;
+    //this.prev = null;
+    //this.next = null;
   } // remove()
 
 } // Node2<T>
