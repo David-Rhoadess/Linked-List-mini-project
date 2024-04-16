@@ -66,9 +66,7 @@ public class Node2<T> {
    */
   Node2<T> insertAfter(T value) {
     Node2<T> tmp = new Node2<T>(this, value, this.next);
-    if (this.next != null) {
-      this.next.prev = tmp;
-    } // if
+    this.next.prev = tmp;
     this.next = tmp;
     return tmp;
   } // insertAfter
@@ -78,9 +76,7 @@ public class Node2<T> {
    */
   Node2<T> insertBefore(T value) {
     Node2<T> tmp = new Node2<T>(this.prev, value, this);
-    if (this.prev != null) {
-      this.prev.next = tmp;
-    } // if
+    this.prev.next = tmp;
     this.prev = tmp;
     return tmp;
   } // insertBefore
@@ -89,12 +85,8 @@ public class Node2<T> {
    * Remove this node.
    */
   void remove() {
-    if (this.prev != null) {
-      this.prev.next = this.next;
-    }
-    if (this.next != null) {
-      this.next.prev = this.prev;
-    }
+    this.prev.next = this.next;
+    this.next.prev = this.prev;
     this.prev = null;
     this.next = null;
   } // remove()

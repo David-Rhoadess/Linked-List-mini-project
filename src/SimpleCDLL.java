@@ -88,7 +88,7 @@ public class SimpleCDLL<T> implements SimpleList<T> {
         ++this.pos;
       } // add(T)
 
-      public boolean hasNext() {
+      public boolean hasNext() { // come back and update these once every thing else is working?
         return (this.pos < SimpleCDLL.this.size);
       } // hasNext()
 
@@ -120,10 +120,16 @@ public class SimpleCDLL<T> implements SimpleList<T> {
       } // prevIndex
 
       public T previous() throws NoSuchElementException {
-        if (!this.hasPrevious())
+        if (!this.hasPrevious()) { 
           throw new NoSuchElementException();
-        // STUB
-        return null;
+        }
+        // Identify the node to update
+        this.update = this.prev;
+        // Move the cursor
+        this.prev = this.next;
+        this.next = this.next.next;
+        this.pos--;
+        return this.update.value;
       } // previous()
 
       public void remove() {
@@ -139,11 +145,6 @@ public class SimpleCDLL<T> implements SimpleList<T> {
         if (this.prev == this.update) {
           this.prev = this.update.prev;
           --this.pos;
-        } // if
-
-        // Update the front
-        if (SimpleCDLL.this.front == this.update) {
-          SimpleCDLL.this.front = this.update.next;
         } // if
 
         // Do the real work
