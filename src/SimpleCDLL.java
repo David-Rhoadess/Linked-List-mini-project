@@ -32,7 +32,9 @@ public class SimpleCDLL<T> implements SimpleList<T> {
    * Create an empty list.
    */
   public SimpleCDLL() {
-    this.dummy = new Node2(dummy, null, dummy);
+    this.dummy = new Node2(null);
+    this.dummy.next = this.dummy;
+    this.dummy.prev = this.dummy;
     this.size = 0;
   } // SimpleDLL
 
