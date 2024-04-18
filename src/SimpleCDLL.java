@@ -186,7 +186,7 @@ public class SimpleCDLL<T> implements SimpleList<T> {
        */
       public void remove() throws IllegalStateException, ConcurrentModificationException{
         failFastCheck();
-        if (!this.hasPrevious()) { 
+        if (this.update == SimpleCDLL.this.dummy) { 
           throw new NoSuchElementException();
         } // if
         // Sanity check
